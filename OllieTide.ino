@@ -32,15 +32,16 @@
 #include <ArduinoJson.h>
 //------- Replace the following! ------
 char ssid[] = "Palm2704";       // your network SSID (name)
-char password[] = "";  // your network key
+char password[] = "9073456071";  // your network key
 
 // For Non-HTTPS requests
 // WiFiClient client;
 
 // For HTTPS requests
 WiFiClientSecure client;
-
-float heightsWater[50];
+float intermed = 0.0;
+float heightsWater[150];
+int hours[100];
 int q = 0;
 // Just the base of the URL you want to connect to
 #define TEST_HOST "www.worldtides.info"
@@ -202,17 +203,27 @@ for (JsonObject height : doc["heights"].as<JsonArray>()) {
   long height_dt = height["dt"]; // 1668668400, 1668670200, 1668672000, 1668673800, 1668675600, ...
   const char* height_date = height["date"]; // "2022-11-17T00:00:00-07:00", "2022-11-17T00:30:00-07:00", ...
     float height_height = height["height"]; // 0.704, 0.749, 0.802, 0.861, 0.923, 0.986, 1.045, 1.098, ...
- //heightsWater[q]= height_height;
- //q++;
+int inter = (height_date[11] - '0') * 10 + (height_date[12] - '0');
+Serial.print("here:  ");
+Serial.println(inter);
+ hours[q] = inter;
+ heightsWater[q] = height_height;
+ q++;
 Serial.print(height_height); 
+
 //Serial.print(height_date);
 }
+Serial.println(q);
+ for(int i = 0; i < q; i++){
+Serial.print(heightsWater[i]);
+Serial.print("      ");
+Serial.print(hours[i]);
+Serial.println();
 
+  }
 }
 
 void loop() {
-  // Stream& input;
-
-
+ 
 
 }
