@@ -32,7 +32,7 @@
 #include <ArduinoJson.h>
 //------- Replace the following! ------
 char ssid[] = "Palm2704";       // your network SSID (name)
-char password[] = "9073456071";  // your network key
+char password[] = "";  // your network key
 
 // For Non-HTTPS requests
 // WiFiClient client;
