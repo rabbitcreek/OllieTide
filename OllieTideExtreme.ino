@@ -29,11 +29,28 @@
 
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
+#include "time.h"
 #include <ArduinoJson.h>
 //------- Replace the following! ------
 char ssid[] = "Palm2704";       // your network SSID (name)
 char password[] = "9073456071";  // your network key
+// NTP server to request epoch time
+const char* ntpServer = "pool.ntp.org";
 
+// Variable to save current epoch time
+unsigned long epochTime; 
+
+// Function that gets current epoch time
+unsigned long getTime() {
+  time_t now;
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    //Serial.println("Failed to obtain time");
+    return(0);
+  }
+  time(&now);
+  return now;
+}
 // For Non-HTTPS requests
 // WiFiClient client;
 
@@ -97,7 +114,7 @@ void setup() {
   // Checking the cert is the best way on an ESP32
   // This will verify the server is trusted.
   client.setCACert(server_cert);
-
+  configTime(0, 0, ntpServer);
   // If you don't want to verify the server
   // Unlike the fingerprint method of the ESP8266 which expires frequently
   // the cert lasts years, so I don't see much reason to ever
@@ -122,7 +139,7 @@ void makeHTTPRequest() {
   // Send HTTP request
   client.print(F("GET "));
   // This is the second half of a request (everything that comes after the base URL)
-  client.print("/api/v3?today&extremes&lat=20.617&lon=-105.230187&localtime&datum=CD&key=8688cbf2-4b2a-4e50-9bb5-9a146976dd69"); // %2C == ,
+  client.print("/api/v3?today&extremes&lat=20.6534&lon=-105.2253&localtime&datum=CD&key=8688cbf2-4b2a-4e50-9bb5-9a146976dd69"); // %2C == ,
   client.println(F(" HTTP/1.1"));
 
   //Headers
@@ -259,7 +276,7 @@ for (JsonObject extreme : doc["extremes"].as<JsonArray>()) {
 int inter = (extreme_date[11] - '0') * 10 + (extreme_date[12] - '0');
 //Serial.print("here:  ");
 //Serial.println(inter);
- hours[q] = extreme_dt;
+ hours[q] = extreme_dt - 25200;
  if(bongo == "High"){
   heightsWater[q] = 1;
  }else heightsWater[q] = 0;
@@ -282,6 +299,10 @@ Serial.println();
 
 
 void loop() {
- 
+ epochTime = getTime();
+  epochTime = epochTime - 25200;
+  Serial.print("Epoch Time: ");
+  Serial.println(epochTime);
+  delay(1000);
 
 }
