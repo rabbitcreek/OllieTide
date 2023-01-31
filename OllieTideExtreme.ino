@@ -37,8 +37,8 @@ TFT_eSPI tft = TFT_eSPI();
 time_t now;
   struct tm timeinfo;
 //------- Replace the following! ------
-char ssid[] = "Palm2704";       // your network SSID (name)
-char password[] = "9073456071";  // your network key
+char ssid[] = "";       // your network SSID (name)
+char password[] = "";  // your network key
 // NTP server to request epoch time
 const char* ntpServer = "pool.ntp.org";
 double timerTrue = 60000;
