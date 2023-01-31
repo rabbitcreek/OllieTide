@@ -26,24 +26,30 @@
 // ----------------------------
 // Standard Libraries
 // ----------------------------
-
+#include <TFT_eSPI.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include "time.h"
 #include <ArduinoJson.h>
+#include <SPI.h>
+//
+TFT_eSPI tft = TFT_eSPI();
+time_t now;
+  struct tm timeinfo;
 //------- Replace the following! ------
 char ssid[] = "Palm2704";       // your network SSID (name)
 char password[] = "9073456071";  // your network key
 // NTP server to request epoch time
 const char* ntpServer = "pool.ntp.org";
-
+double timerTrue = 60000;
 // Variable to save current epoch time
 unsigned long epochTime; 
-
+long timerNow;
+unsigned long previousMillis = 0;
+unsigned long interval = 30000;
 // Function that gets current epoch time
 unsigned long getTime() {
-  time_t now;
-  struct tm timeinfo;
+  
   if (!getLocalTime(&timeinfo)) {
     //Serial.println("Failed to obtain time");
     return(0);
@@ -59,7 +65,7 @@ WiFiClientSecure client;
 float intermed = 0.0;
 bool heightsWater[15];
 int hours[100];
-int q = 0;
+int qr = 0;
 // Just the base of the URL you want to connect to
 #define TEST_HOST "www.worldtides.info"
 
@@ -92,7 +98,7 @@ const char *server_cert = "-----BEGIN CERTIFICATE-----\n"
 void setup() {
 
   Serial.begin(115200);
-
+  timerNow = millis();
   // Connect to the WiFI
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
@@ -110,7 +116,8 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   //--------
-
+  tft.init();
+  tft.setRotation(1);
   // Checking the cert is the best way on an ESP32
   // This will verify the server is trusted.
   client.setCACert(server_cert);
@@ -120,12 +127,14 @@ void setup() {
   // the cert lasts years, so I don't see much reason to ever
   // use this on the ESP32
    client.setInsecure();
-
+  tft.setTextSize(1);
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
   makeHTTPRequest();
 }
 
 void makeHTTPRequest() {
-
+qr = 0;
   // Opening connection to server (Use 80 as port if HTTP)
   if (!client.connect(TEST_HOST, 443))
   {
@@ -185,61 +194,8 @@ void makeHTTPRequest() {
     Serial.println("BAD");
   }
 
-  // While the client is still availble read each
-  // byte and print to the serial monitor
-//  while (client.available()) {
-//    char c = 0;
-//    client.readBytes(&c, 1);
- //   Serial.print(c);
-//  }
-/*
-DynamicJsonDocument doc(12288);
 
-DeserializationError error = deserializeJson(doc, client);
 
-if (error) {
-  Serial.print("deserializeJson() failed: ");
-  Serial.println(error.c_str());
-  return;
-}
-
-int Status = doc["status"]; // 200
-int callCount = doc["callCount"]; // 1
-const char* copyright = doc["copyright"]; // "Tidal data retrieved from www.worldtides.info. Copyright ...
-double requestLat = doc["requestLat"]; // 21.347724
-double requestLon = doc["requestLon"]; // -105.245877
-float responseLat = doc["responseLat"]; // 21.3333
-float responseLon = doc["responseLon"]; // -105.333
-const char* atlas = doc["atlas"]; // "TPXO"
-const char* timezone = doc["timezone"]; // "Etc/GMT-7"
-const char* requestDatum = doc["requestDatum"]; // "CD"
-const char* responseDatum = doc["responseDatum"]; // "CD"
-
-for (JsonObject height : doc["heights"].as<JsonArray>()) {
-
-  long height_dt = height["dt"]; // 1668668400, 1668670200, 1668672000, 1668673800, 1668675600, ...
-  const char* height_date = height["date"]; // "2022-11-17T00:00:00-07:00", "2022-11-17T00:30:00-07:00", ...
-    float height_height = height["height"]; // 0.704, 0.749, 0.802, 0.861, 0.923, 0.986, 1.045, 1.098, ...
-int inter = (height_date[11] - '0') * 10 + (height_date[12] - '0');
-Serial.print("here:  ");
-Serial.println(inter);
- hours[q] = inter;
- heightsWater[q] = height_height;
- q++;
-Serial.print(height_height); 
-
-//Serial.print(height_date);
-}
-Serial.println(q);
- for(int i = 0; i < q; i++){
-Serial.print(heightsWater[i]);
-Serial.print("      ");
-Serial.print(hours[i]);
-Serial.println();
-
-  }
-  */
-  // Stream& input;
 
 //StaticJsonDocument<2048> doc;
 DynamicJsonDocument doc(12288);
@@ -276,18 +232,18 @@ for (JsonObject extreme : doc["extremes"].as<JsonArray>()) {
 int inter = (extreme_date[11] - '0') * 10 + (extreme_date[12] - '0');
 //Serial.print("here:  ");
 //Serial.println(inter);
- hours[q] = extreme_dt - 25200;
+ hours[qr] = extreme_dt -25200;
  if(bongo == "High"){
-  heightsWater[q] = 1;
- }else heightsWater[q] = 0;
+  heightsWater[qr] = 1;
+ }else heightsWater[qr] = 0;
  //heightsWater[q] = extreme_height;
- q++;
+ qr++;
 Serial.print(extreme_height); 
 
 //Serial.print(height_date);
 }
-Serial.println(q);
- for(int i = 0; i < q; i++){
+Serial.println(qr);
+ for(int i = 0; i < qr; i++){
 Serial.print(heightsWater[i]);
 Serial.print("      ");
 Serial.print(hours[i]);
@@ -299,10 +255,45 @@ Serial.println();
 
 
 void loop() {
- epochTime = getTime();
+  //check epic time every 60 minutes
+  /*
+  unsigned long currentMillis = millis();
+  // if WiFi is down, try reconnecting every CHECK_WIFI_TIME seconds
+  if ((WiFi.status() != WL_CONNECTED) && (currentMillis - previousMillis >=interval)) {
+    Serial.print(millis());
+    Serial.println("Reconnecting to WiFi...");
+    WiFi.disconnect();
+    WiFi.reconnect();
+    previousMillis = currentMillis;
+  }
+  */
+  if( millis() - timerNow >= timerTrue) {
+  tft.fillScreen(TFT_BLACK);
+  //makeHTTPRequest(); 
+  epochTime = getTime();
   epochTime = epochTime - 25200;
+  tft.drawNumber(epochTime, 0, 100, 4);
   Serial.print("Epoch Time: ");
   Serial.println(epochTime);
+  showTime(timeinfo);
+  timerNow = millis();
+  }
   delay(1000);
 
+}
+void showTime(tm localTime) {
+  Serial.print(localTime.tm_mday);
+  Serial.print('/');
+  Serial.print(localTime.tm_mon + 1);
+  Serial.print('/');
+  Serial.print(localTime.tm_year - 100);
+  Serial.print('-');
+  Serial.print(localTime.tm_hour);
+  Serial.print(':');
+  Serial.print(localTime.tm_min);
+  Serial.print(':');
+  Serial.print(localTime.tm_sec);
+  Serial.print(" Day of Week ");
+  if (localTime.tm_wday == 0)   Serial.println(7);
+  else Serial.println(localTime.tm_wday);
 }
