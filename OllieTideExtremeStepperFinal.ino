@@ -49,6 +49,7 @@ const int DECELERATION_IN_STEPS_PER_SECOND = 2000;
 double epic;
 double epic2;
 int que;
+const int enablePin = 39;
 // create the stepper motor object
 ESP_FlexyStepper stepper;
 Servo servo1;
@@ -122,7 +123,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(EMERGENCY_STOP_PINB, INPUT_PULLUP);
   pinMode(EMERGENCY_STOP_PINT, INPUT_PULLUP);
-  
+  servo1.attach(servoPin);
   // put your setup code here, to run once:
   
  stepper.connectToPins(MOTOR_STEP_PIN, MOTOR_DIRECTION_PIN);
@@ -133,6 +134,8 @@ void setup() {
   stepper.startAsService();
   servo1.attach(servoPin);
   timerNow = millis();
+  pinMode(enablePin,OUTPUT);
+  digitalWrite(enablePin, HIGH);
   tft.init();
   tft.setRotation(1);
   tft.setTextSize(2);
@@ -308,8 +311,9 @@ void loop() {
       if(epochHiLow[zone] > epochTime){
         if(hiLow[zone] ==  1){ 
           crank = -1;
+          //digitalWrite(enablePin, LOW);
           if( stepper.moveToHomeInMillimeters(1,2500.0, 6000,26)){
-            servo1.attach(servoPin);
+            
             servo1.write(180);
             delay(1000);
             //servo1.detach();
@@ -318,26 +322,16 @@ void loop() {
           
         } else  {
           crank = 1;
+          //digitalWrite(enablePin, LOW);
           if( stepper.moveToHomeInMillimeters(-1,2500.0, 6000,32)){
-            servo1.attach(servoPin);
-            servo1.write(180);
+            
+            servo1.write(90);
             delay(1000);
             //servo1.detach();
             moving(crank);
         }
         }
-         Serial.print( "Percentage of time before next: ");
-         Serial.println(diff);
-         Serial.print("epic");
-         Serial.println(epic); 
-         Serial.print("epic2");
-         Serial.println(epic2);
-         tft.drawNumber(diff, 100, 100, 4);
-         //tft.drawNumber(diff, 100, 100, 4);
-         if(hiLow[zone] == 0) { 
-          tft.drawString("% to low", 130, 100, 4);
-         } else tft.drawString("% to High",  130, 100, 4);
-         //tft.print(hiLow[zone]);
+         
          done = 0;
          zone = qr;
       }
@@ -385,6 +379,20 @@ void moving( int drug){
             epic2 = (epochHiLow[que] - epochHiLow[que - 1]);
             diff = 100.0 * float(( epic / epic2));
             diff = constrain(diff, 1,100);
+            Serial.print( "Percentage of time before next: ");
+         Serial.println(diff);
+         Serial.print("epic");
+         Serial.println(epic); 
+         Serial.print("epic2");
+         Serial.println(epic2);
+         tft.drawString("      ",100, 100, 4);
+         tft.drawNumber(diff, 100, 100, 4);
+         //tft.drawNumber(diff, 100, 100, 4);
+         if(hiLow[que] == 0) { 
+          tft.drawString("% to low   ", 130, 100, 4);
+         } else tft.drawString("% to High",  130, 100, 4);
             int mover = map(diff, 1,100, 1, 4800);
+            digitalWrite(enablePin, LOW);
             stepper.moveToPositionInMillimeters( drug * mover);
+            digitalWrite(enablePin, HIGH);
 }
