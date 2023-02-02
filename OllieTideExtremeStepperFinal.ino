@@ -49,7 +49,7 @@ const int DECELERATION_IN_STEPS_PER_SECOND = 2000;
 double epic;
 double epic2;
 int que;
-const int enablePin = 39;
+const int enablePin = 22;
 // create the stepper motor object
 ESP_FlexyStepper stepper;
 Servo servo1;
@@ -311,7 +311,7 @@ void loop() {
       if(epochHiLow[zone] > epochTime){
         if(hiLow[zone] ==  1){ 
           crank = -1;
-          //digitalWrite(enablePin, LOW);
+          digitalWrite(enablePin, LOW);
           if( stepper.moveToHomeInMillimeters(1,2500.0, 6000,26)){
             
             servo1.write(180);
@@ -322,7 +322,7 @@ void loop() {
           
         } else  {
           crank = 1;
-          //digitalWrite(enablePin, LOW);
+          digitalWrite(enablePin, LOW);
           if( stepper.moveToHomeInMillimeters(-1,2500.0, 6000,32)){
             
             servo1.write(90);
