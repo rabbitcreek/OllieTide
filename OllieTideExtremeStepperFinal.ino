@@ -159,6 +159,11 @@ void setup() {
   tft.println("CONNECTED");
   //--------
   epochTime = 0;
+    qr = 0;
+for(int z = 0; z < 15; z++){
+  epochHiLow[z] = 0;
+  hiLow[z] = 0;
+}
   // Checking the cert is the best way on an ESP32
   // This will verify the server is trusted.
   client.setCACert(server_cert);
@@ -168,18 +173,16 @@ void setup() {
   // the cert lasts years, so I don't see much reason to ever
   // use this on the ESP32
    client.setInsecure();
-  
+   tft.setTextSize(1);
   makeHTTPRequest();
+  
+
 }
 
 void makeHTTPRequest() {
   //tft.fillScreen(TFT_BLACK);
-  tft.setTextSize(1);
-qr = 0;
-for(int z = 0; z < 15; z++){
-  epochHiLow[z] = 0;
-  hiLow[z] = 0;
-}
+ 
+
   // Opening connection to server (Use 80 as port if HTTP)
   if (!client.connect(TEST_HOST, 443))
   {
@@ -298,6 +301,7 @@ Serial.print("      ");
 Serial.print(epochHiLow[i]);
 Serial.println();
 
+
   }
 }
 
@@ -305,8 +309,11 @@ Serial.println();
 
 void loop() {
   //check epic time every 60 minutes
-  if(done == 1 && epochHiLow != 0) {
+  if(done == 1 && epochHiLow[1] != 0) {
     for(int zone = 0; zone <= qr; zone++){
+      if(epochHiLow[zone] == 0 && zone != 0){
+        makeHTTPRequest();
+      }
       que = zone;
       if(epochHiLow[zone] > epochTime){
         if(hiLow[zone] ==  1){ 
@@ -381,10 +388,8 @@ void moving( int drug){
             diff = constrain(diff, 1,100);
             Serial.print( "Percentage of time before next: ");
          Serial.println(diff);
-         Serial.print("epic");
-         Serial.println(epic); 
-         Serial.print("epic2");
-         Serial.println(epic2);
+         Serial.print("epochTimeofTide");
+         Serial.println(epochHiLow[que]); 
          tft.drawString("      ",100, 100, 4);
          tft.drawNumber(diff, 100, 100, 4);
          //tft.drawNumber(diff, 100, 100, 4);
