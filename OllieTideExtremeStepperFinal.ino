@@ -49,6 +49,7 @@ const int DECELERATION_IN_STEPS_PER_SECOND = 2000;
 double epic;
 double epic2;
 int que;
+int counterBabe = 0;
 const int enablePin = 22;
 // create the stepper motor object
 ESP_FlexyStepper stepper;
@@ -159,7 +160,7 @@ void setup() {
   tft.println("CONNECTED");
   //--------
   epochTime = 0;
-    qr = 0;
+  qr = 0;
 for(int z = 0; z < 15; z++){
   epochHiLow[z] = 0;
   hiLow[z] = 0;
@@ -174,15 +175,18 @@ for(int z = 0; z < 15; z++){
   // use this on the ESP32
    client.setInsecure();
    tft.setTextSize(1);
-  makeHTTPRequest();
+   makeHTTPRequest();
   
 
 }
 
 void makeHTTPRequest() {
   //tft.fillScreen(TFT_BLACK);
- 
-
+  qr = 0;
+for(int z = 0; z < 15; z++){
+  epochHiLow[z] = 0;
+  hiLow[z] = 0;
+}
   // Opening connection to server (Use 80 as port if HTTP)
   if (!client.connect(TEST_HOST, 443))
   {
@@ -290,11 +294,11 @@ int inter = (extreme_date[11] - '0') * 10 + (extreme_date[12] - '0');
  }else hiLow[qr] = 0;
  //hiLow[q] = extreme_height;
  qr++;
-Serial.print(extreme_height); 
+//Serial.print(extreme_height); 
 
 //Serial.print(height_date);
 }
-Serial.println(qr);
+//Serial.println(qr);
  for(int i = 0; i <= qr; i++){
 Serial.print(hiLow[i]);
 Serial.print("      ");
@@ -308,11 +312,12 @@ Serial.println();
 
 
 void loop() {
+  tft.drawNumber(que, 180, 30, 7);
   //check epic time every 60 minutes
   if(done == 1 && epochHiLow[1] != 0) {
     for(int zone = 0; zone <= qr; zone++){
-      if(epochHiLow[zone] == 0 && zone != 0){
-        makeHTTPRequest();
+      if( epochHiLow[zone + 1] == 0){
+      restarter();     
       }
       que = zone;
       if(epochHiLow[zone] > epochTime){
@@ -332,7 +337,7 @@ void loop() {
           digitalWrite(enablePin, LOW);
           if( stepper.moveToHomeInMillimeters(-1,2500.0, 6000,32)){
             
-            servo1.write(90);
+            servo1.write(0);
             delay(1000);
             //servo1.detach();
             moving(crank);
@@ -400,4 +405,11 @@ void moving( int drug){
             digitalWrite(enablePin, LOW);
             stepper.moveToPositionInMillimeters( drug * mover);
             digitalWrite(enablePin, HIGH);
+}
+void restarter(){
+      Serial.println("Restarting in 10 seconds");
+      delay(10000);  
+      ESP.restart();
+       
+      
 }
