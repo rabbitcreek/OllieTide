@@ -31,8 +31,8 @@
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 //------- Replace the following! ------
-char ssid[] = "Palm2704";       // your network SSID (name)
-char password[] = "9073456071";  // your network key
+char ssid[] = "";       // your network SSID (name)
+char password[] = "";  // your network key
 
 // For Non-HTTPS requests
 // WiFiClient client;
@@ -123,7 +123,7 @@ void makeHTTPRequest() {
   // Send HTTP request
   client.print(F("GET "));
   // This is the second half of a request (everything that comes after the base URL)
-  client.print("/api/v3?heights&today&lat=21.347724&lon=-105.245877&localtime&datum=CD&key=8688cbf2-4b2a-4e50-9bb5-9a146976dd69"); // %2C == ,
+  client.print("/api/v3?heights&today&lat=21.347724&lon=-105.245877&localtime&datum=CD&key="); // %2C == ,
   client.println(F(" HTTP/1.1"));
 
   //Headers
