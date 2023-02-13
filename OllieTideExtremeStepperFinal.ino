@@ -60,8 +60,8 @@ time_t now;
 bool done  = 0;
   struct tm timeinfo;
 //------- Replace the following! ------
-char ssid[] = "";       // your network SSID (name)
-char password[] = "";  // your network key
+char ssid[] = "Palm2704";       // your network SSID (name)
+char password[] = "9073456071";  // your network key
 // NTP server to request epoch time
 const char* ntpServer = "pool.ntp.org";
 double timerTrue = 60000;
@@ -200,7 +200,7 @@ for(int z = 0; z < 15; z++){
   // Send HTTP request
   client.print(F("GET "));
   // This is the second half of a request (everything that comes after the base URL)
-  client.print("/api/v3?today&extremes&lat=20.6534&lon=-105.2253&localtime&datum=CD&key="); // %2C == ,
+  client.print("/api/v3?today&extremes&lat=20.6534&lon=-105.2253&localtime&datum=CD&key=8688cbf2-4b2a-4e50-9bb5-9a146976dd69"); // %2C == ,
   client.println(F(" HTTP/1.1"));
 
   //Headers
