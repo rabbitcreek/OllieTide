@@ -26,6 +26,7 @@
 // ----------------------------
 // Standard Libraries
 // ----------------------------
+#include "notes.h"
 #include <TFT_eSPI.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
@@ -60,8 +61,8 @@ time_t now;
 bool done  = 0;
   struct tm timeinfo;
 //------- Replace the following! ------
-char ssid[] = "Palm2704";       // your network SSID (name)
-char password[] = "9073456071";  // your network key
+char ssid[] = myWifi;       // your network SSID (name)
+char password[] = myPassword;  // your network key
 // NTP server to request epoch time
 const char* ntpServer = "pool.ntp.org";
 double timerTrue = 60000;
